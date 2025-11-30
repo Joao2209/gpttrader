@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jota Trader GPT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icones para a barra de navegação e outros elementos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Chart.js CDN para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Reset básico e box-sizing para todos os elementos */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --cor-fundo: #0c0c0c;
+            --cor-card-fundo: #1c1c1c;
+            --cor-primaria-roxo: #8a2be2; /* Roxo principal */
+            --cor-primaria-verde: #00ff00; /* Verde para destaque secundário (ex: conectado) */
+            --cor-texto-claro: #e0e0e0;
+            --cor-texto-cinza: #a0a0a0;
+            --cor-borda: #333;
+            --cor-separador: #2a2a2a;
+            --cor-conectado: #00e676; /* Verde mais claro para "Conectado" */
+            --cor-erro: #ff4444; /* Cor para mensagens de erro */
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-claro);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        /* --- Login Screen Styles --- */
+        .login-screen {
+            display: flex; /* Initially block, can be 'none' if you want the app to load directly */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            width: 100%;
+            position: fixed; /* Fixes it over the main content */
+            top: 0;
+            left: 0;
+            background-color: var(--cor-fundo); /* Ensures full background cover */
+            z-index: 2000; /* Ensures it's on top */
+        }
+
+        .login-container {
+            background-color: var(--cor-card-fundo);
+            border-radius: 12px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border: 1px solid var(--cor-borda);
+            text-align: center;
+        }
+
+        .login-container .logo-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .login-container .logo-icon {
+            color: var(--cor-primaria-roxo);
+            font-size: 2.2em;
+            margin-right: 10px;
+        }
+
+        .login-container .app-title {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: var(--cor-texto-claro);
+            display: flex;
+            align-items: center;
+        }
+
+        .login-container .app-title span {
+            font-weight: 400;
+        }
+
+        .login-container h2 {
+            font-size: 1.3em;
+            color: var(--cor-texto-claro);
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background-color: #2a2a2a;
+            color: var(--cor-texto-claro);
+            font-size: 1em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--cor-primaria-roxo);
+            box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.4);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 15px 20px;
+            background-color: var(--cor-primaria-roxo);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+        }
+
+        .login-button:hover {
+            background-color: #a053ed;
+        }
+
+        .error-message {
+            color: var(--cor-erro);
+            font-size: 0.9em;
+            margin-top: -15px;
+            margin-bottom: 20px;
+            display: none; /* Hidden by default */
+        }
+
+        .register-info { /* New style for the register text */
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: var(--cor-texto-cinza);
+            line-height: 1.5;
+        }
+
+        .register-button { /* New style for the register button */
+            width: 100%;
+            padding: 12px 20px;
+            background-color: #3a3a3a; /* Darker gray for contrast */
+            color: var(--cor-texto-claro);
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-decoration: none; /* For the anchor tag */
+            display: inline-block; /* To allow padding and width */
+            margin-bottom: 25px;
+        }
+
+        .register-button:hover {
+            background-color: #555;
+        }
+
+        .footer-text {
+            margin-top: 30px; /* Adjusted margin to accommodate new elements */
+            font-size: 0.8em;
+            color: var(--cor-texto-cinza);
+            line-height: 1.5;
+        }
+
+        .footer-text strong {
+            color: var(--cor-texto-claro);
+            font-weight: 500;
+        }
+
+
+        /* --- Main App Styles (from ai_studio_code (3).html) --- */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+            background-color: var(--cor-fundo);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            min-height: 100vh;
+            /* Initially hidden, will be shown after login */
+            display: none;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background-color: var(--cor-fundo);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--cor-separador);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .top-bar .logo-section {
+            display: flex;
+            align-items: center;
+        }
+
+        .top-bar .logo-icon {
+            color: var(--cor-primaria-roxo);
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        .top-bar .app-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: var(--cor-texto-claro);
+            display: flex;
+            align-items: center;
+        }
+
+        .top-bar .app-title span {
+            font-weight: 400;
+        }
+
+        .top-bar .ai-assistant {
+            font-size: 0.75em;
+            color: var(--cor-texto-cinza);
+            background-color: #2a2a2a;
+            padding: 4px 8px;
+            border-radius: 5px;
+            margin-left: 10px;
+            font-weight: 500;
+        }
+
+        .top-bar .status-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .top-bar .lang-btn {
+            background-color: #3a3a3a;
+            color: var(--cor-texto-claro);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .top-bar .connection-status {
+            color: var(--cor-conectado);
+            font-size: 0.95em;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .top-bar .connection-status i {
+            margin-right: 5px;
+            font-size: 1.1em;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 20px;
+            flex-grow: 1;
+        }
+
+        .config-card {
+            background-color: var(--cor-card-fundo);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid var(--cor-borda);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .config-card h2 {
+            font-size: 1.2em;
+            color: var(--cor-primaria-roxo);
+            margin-bottom: 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--cor-separador);
+            padding-bottom: 10px;
+        }
+
+        .config-item {
+            margin-bottom: 20px;
+        }
+
+        .config-item label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--cor-texto-cinza);
+            font-weight: 500;
+            font-size: 0.9em;
+            text-align: left;
+        }
+
+        .config-item select {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background-color: #2a2a2a;
+            color: var(--cor-texto-claro);
+            font-size: 1em;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a0a0a0%22%20d%3D%22M287%20114.3L146.2%20255.1%205.4%20114.3h281.6z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 12px;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .config-item select:focus {
+            outline: none;
+            border-color: var(--cor-primaria-roxo);
+            box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.4);
+        }
+
+        .upload-card {
+            background-color: var(--cor-card-fundo);
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            border: 1px solid var(--cor-borda);
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .upload-icon-container {
+            width: 80px;
+            height: 80px;
+            background-color: #333;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px auto;
+            position: relative;
+        }
+
+        .upload-icon-container .main-icon {
+            color: var(--cor-texto-cinza);
+            font-size: 2.5em;
+        }
+
+        .upload-icon-container .plus-icon {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background-color: var(--cor-primaria-roxo);
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            border: 3px solid var(--cor-card-fundo);
+        }
+
+        .upload-card h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: var(--cor-texto-claro);
+        }
+
+        .upload-card p {
+            font-size: 0.9em;
+            color: var(--cor-texto-cinza);
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        /* Container para os botões de upload e análise */
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Espaçamento entre os botões */
+            width: 100%; /* Garante que o grupo ocupe a largura total */
+            align-items: stretch; /* Garante que os itens se estiquem para preencher a largura do container flex */
+        }
+
+        /* Aplica o estilo base para os botões dentro do grupo */
+        .button-group .analyze-button {
+            background-color: var(--cor-primaria-roxo);
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%; /* Important for consistent width within flex container */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+            text-decoration: none; /* Remove underline for label acting as button */
+        }
+
+        .button-group .analyze-button i {
+            font-size: 1.2em;
+        }
+
+        .button-group .analyze-button:hover {
+            background-color: #a053ed;
+        }
+
+        .loading-animation {
+            display: none;
+            margin: 30px auto;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(138, 43, 226, 0.3);
+            border-top: 5px solid var(--cor-primaria-roxo);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-section {
+            background-color: var(--cor-card-fundo);
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid var(--cor-borda);
+            display: none;
+            margin-top: 25px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .result-section h4 {
+            color: var(--cor-primaria-roxo);
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .result-item {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: var(--cor-texto-claro);
+        }
+
+        .action.buy {
+            color: #00e676;
+            font-weight: bold;
+        }
+
+        .action.sell {
+            color: #ff1744;
+            font-weight: bold;
+        }
+
+        .gale-info {
+            font-size: 0.9em;
+            color: var(--cor-texto-cinza);
+            margin-top: 15px;
+        }
+
+        /* --- History Section Styles --- */
+        .history-card {
+            background-color: var(--cor-card-fundo);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid var(--cor-borda);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .history-card h2 {
+            font-size: 1.2em;
+            color: var(--cor-primaria-roxo);
+            margin-bottom: 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--cor-separador);
+            padding-bottom: 10px;
+        }
+
+        .history-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap; /* Permite que os botões quebrem a linha em telas menores */
+        }
+
+        .history-controls button {
+            background-color: #3a3a3a;
+            color: var(--cor-texto-claro);
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex: 1; /* Permite que os botões se expandam */
+            min-width: 100px; /* Largura mínima para botões */
+        }
+
+        .history-controls button:hover {
+            background-color: #555;
+        }
+
+        .history-controls button.win {
+            background-color: #00e676;
+            color: #1c1c1c;
+        }
+
+        .history-controls button.win:hover {
+            background-color: #00c853;
+        }
+
+        .history-controls button.loss {
+            background-color: #ff1744;
+            color: white;
+        }
+
+        .history-controls button.loss:hover {
+            background-color: #d50000;
+        }
+
+        .history-controls button.wing1 {
+            background-color: #64dd17; /* Um verde um pouco diferente */
+            color: #1c1c1c;
+        }
+        .history-controls button.wing1:hover {
+            background-color: #4caf50;
+        }
+
+        .history-controls button.wing2 {
+            background-color: #aeea00; /* Um verde mais claro */
+            color: #1c1c1c;
+        }
+        .history-controls button.wing2:hover {
+            background-color: #c6ff00;
+        }
+
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 250px; /* Altura máxima para a lista de histórico */
+            overflow-y: auto; /* Adiciona scroll se o conteúdo for maior */
+            border: 1px solid var(--cor-separador);
+            border-radius: 8px;
+            background-color: #1a1a1a;
+        }
+
+        .history-list li {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--cor-separador);
+            text-align: left;
+            font-size: 0.95em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-list li:last-child {
+            border-bottom: none;
+        }
+
+        .history-list li.win-item {
+            color: #00e676;
+        }
+
+        .history-list li.loss-item {
+            color: #ff1744;
+        }
+
+        .history-list li.wing1-item {
+            color: #64dd17;
+        }
+
+        .history-list li.wing2-item {
+            color: #aeea00;
+        }
+
+        .assertiveness-metrics {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--cor-separador);
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .metric-item {
+            font-size: 1.1em;
+            color: var(--cor-texto-claro);
+            font-weight: 500;
+        }
+
+        .metric-item .count {
+            font-weight: 700;
+            font-size: 1.3em;
+            margin-left: 5px;
+        }
+
+        .metric-item.win-count .count {
+            color: #00e676;
+        }
+
+        .metric-item.loss-count .count {
+            color: #ff1744;
+        }
+
+        /* --- New Performance Section Styles --- */
+        .performance-card {
+            background-color: var(--cor-card-fundo);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid var(--cor-borda);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .performance-card h2 {
+            font-size: 1.2em;
+            color: var(--cor-primaria-roxo);
+            margin-bottom: 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--cor-separador);
+            padding-bottom: 10px;
+        }
+
+        .performance-metrics-summary {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .performance-metric-item {
+            background-color: #2a2a2a;
+            padding: 10px 15px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 130px; /* Garante que os itens não fiquem muito pequenos */
+            text-align: center;
+            border: 1px solid #3a3a3a;
+        }
+
+        .performance-metric-item .label {
+            font-size: 0.85em;
+            color: var(--cor-texto-cinza);
+            margin-bottom: 5px;
+        }
+
+        .performance-metric-item .value {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: var(--cor-texto-claro);
+        }
+
+        .performance-metric-item.assertividade .value {
+            color: #00e676; /* Verde para assertividade */
+        }
+
+        .performance-metric-item.alavancagem .value {
+            color: #8a2be2; /* Roxo para alavancagem */
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 200px; /* Altura fixa para o gráfico */
+            margin-top: 20px;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex; /* Para centralizar o canvas */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chart-container canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* --- Notification Styles --- */
+        .notification-container {
+            position: fixed;
+            top: 50%; /* Posiciona o topo do container no meio da tela */
+            left: 50%;
+            transform: translate(-50%, -50%); /* Centraliza o container */
+            display: flex;
+            flex-direction: column; /* Para empilhar as notificações se houver mais de uma */
+            align-items: center; /* Centraliza as notificações horizontalmente */
+            gap: 10px;
+            z-index: 2000;
+            width: 90%;
+            max-width: 350px;
+            pointer-events: none; /* Permite clicar através do container */
+        }
+
+        .notification {
+            background-color: #28a745; /* Green for success */
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            font-weight: 600;
+            opacity: 0;
+            /* Usamos 'translateY' para a animação. Se for no centro, ele pode subir ou descer um pouco. */
+            transform: translateY(0px); /* Começa no lugar, não mais de baixo */
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+            pointer-events: auto; /* Permite interação com a notificação individual */
+        }
+
+        .notification.show {
+            opacity: 1;
+            /* Para a animação de entrada, podemos fazer ele vir de um pouco mais de cima, por exemplo */
+            transform: translateY(-20px); /* Sobe um pouco ao aparecer */
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-container">
+            <div class="logo-section">
+                <i class="fas fa-bolt logo-icon"></i>
+                <div class="app-title">Jota Trader<span>GPT</span></div>
+            </div>
+            <h2>Insira a chave de acesso para continuar:</h2>
+            <div class="input-group">
+                <input type="password" id="access-key" placeholder="Chave de Acesso" required>
+            </div>
+            <p class="error-message" id="error-msg">Chave de acesso incorreta. Tente novamente.</p>
+            <button class="login-button" onclick="checkAccessKey()">Entrar</button>
+
+            <!-- New Register Section -->
+            <p class="register-info">
+                Para gerar sua chave de acesso, crie sua conta pelo link abaixo para podermos conectar a API da plataforma com a IA:
+            </p>
+            <a href="https://trade.avalonbroker.com/register?aff=421524&aff_model=revenue&afftrack=" target="_blank" class="register-button">
+                Crie sua conta aqui
+            </a>
+            <!-- End New Register Section -->
+
+            <div class="footer-text">
+                Painel criado por <strong>Dev jvrawuh</strong><br>
+                Direitos reservados a Jota Corporation
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Content -->
+    <div class="app-container" id="appContainer">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="logo-section">
+                <i class="fas fa-bolt logo-icon"></i>
+                <div class="app-title">Jota Trader<span>GPT</span></div>
+                <div class="ai-assistant">AI Trading Assistant</div>
+            </div>
+            <div class="status-section">
+                <div class="lang-btn">PT</div>
+                <div class="connection-status">
+                    <i class="fas fa-wifi"></i> Conectado
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- AI Configuration Card -->
+            <div class="config-card">
+                <h2>Configuração da Análise</h2>
+                <div class="config-item">
+                    <label for="ai-selection">Selecionar Inteligência Artificial:</label>
+                    <select id="ai-selection">
+                        <option value="chatgpt">ChatGPT</option>
+                        <option value="gemini">Gemini</option>
+                        <option value="grok3">Grok 3</option>
+                    </select>
+                </div>
+
+                <div class="config-item">
+                    <label for="strategy-selection">Selecionar Estratégia:</label>
+                    <select id="strategy-selection">
+                        <option value="conservador">Conservador</option>
+                        <option value="moderado">Moderado</option>
+                        <option value="agressivo">Agressivo</option>
+                        <option value="scalping">Scalping</option>
+                    </select>
+                </div>
+
+                <div class="config-item">
+                    <label for="pair-selection">Selecionar Paridade:</label>
+                    <select id="pair-selection">
+                        <option value="eurusd">EUR/USD</option>
+                        <option value="gbpusd">GBP/USD</option>
+                        <option value="usdjpy">USD/JPY</option>
+                        <option value="audusd">AUD/USD</option>
+                        <option value="usdcad">USD/CAD</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Upload Card -->
+            <div class="upload-card">
+                <div class="upload-icon-container">
+                    <i class="fas fa-image main-icon"></i>
+                    <i class="fas fa-plus plus-icon"></i>
+                </div>
+                <h3>Analisar Gráfico</h3>
+                <p>Faça upload de uma foto ou tire uma foto do gráfico ao vivo para análise pela IA.</p>
+                <input type="file" id="chart-upload" accept="image/*" capture="environment" style="display: none;">
+
+                <div class="button-group">
+                    <label for="chart-upload" class="analyze-button upload-trigger">
+                        <i class="fas fa-upload"></i> Carregar Gráfico
+                    </label>
+                    <button class="analyze-button analyze-trigger" onclick="analyzeChart()">
+                        <i class="fas fa-chart-line"></i> Analisar Entrada com IA
+                    </button>
+                </div>
+            </div>
+
+            <div class="loading-animation" id="loading"></div>
+
+            <div class="result-section" id="result">
+                <h4>Resultado da Análise</h4>
+                <div class="result-item">Entrada: <span id="entry-action" class="action"></span></div>
+                <div class="result-item">Tempo de Validade: <span id="entry-time">2 minutos</span></div>
+                <div class="gale-info">Fazer Gale se necessário.</div>
+            </div>
+
+            <!-- History Section -->
+            <div class="history-card">
+                <h2>Histórico de Operações</h2>
+                <div class="history-controls">
+                    <button class="win" onclick="addOperation('WIN')">WIN</button>
+                    <button class="loss" onclick="addOperation('LOSS')">LOSS</button>
+                    <button class="wing1" onclick="addOperation('WIN G1')">WIN G1</button>
+                    <button class="wing2" onclick="addOperation('WIN G2')">WIN G2</button>
+                </div>
+                <ul class="history-list" id="operation-history">
+                    <!-- Operations will be added here -->
+                </ul>
+                <div class="assertiveness-metrics">
+                    <div class="metric-item win-count">WIN: <span id="win-count" class="count">0</span></div>
+                    <div class="metric-item loss-count">LOSS: <span id="loss-count" class="count">0</span></div>
+                </div>
+            </div>
+
+            <!-- Performance Section -->
+            <div class="performance-card">
+                <h2>Performance e Métricas</h2>
+                <div class="performance-metrics-summary">
+                    <div class="performance-metric-item assertividade">
+                        <div class="label">Assertividade</div>
+                        <div class="value" id="assertiveness-percentage">0%</div>
+                    </div>
+                    <div class="performance-metric-item alavancagem">
+                        <div class="label">Chance Alavancagem</div>
+                        <div class="value" id="leverage-chance">0%</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="assertivenessChart"></canvas>
+                </div>
+            </div>
+            
+            <div style="height: 50px;"></div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <script>
+        const correctKey = "us8kykdyq9"; // Chave de acesso padrão
+        let winCount = 0;
+        let lossCount = 0;
+        let totalOperations = 0;
+        let assertivenessChart; // Variável para a instância do Chart.js
+
+        const winMessages = [
+            "Parabéns! Hackeando os trades 🔥👻",
+            "Mais um pra conta! Em busca da viagem para Dubai... pra cima, money maker! 💸",
+            "É WIN que fala? A IA tá on! 🚀",
+            "Mestre dos gráficos! 🧠💰",
+            "Lucro na veia! Isso que é trade de respeito! 😎",
+            "Impecável! O algoritmo não erra! ✨",
+            "VAI JOTA TRADER GPT! 🌟",
+            "Mais verdinho que floresta amazônica! 🌳🟢",
+            "Aquele WIN que a gente ama! ❤️‍🔥",
+            "Tô vendo seu nome na lista da Forbes! 📈"
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar o gráfico quando o DOM estiver pronto
+            const ctx = document.getElementById('assertivenessChart').getContext('2d');
+            assertivenessChart = new Chart(ctx, {
+                type: 'doughnut', // Gráfico de rosca para porcentagem
+                data: {
+                    labels: ['Vitórias', 'Derrotas'],
+                    datasets: [{
+                        data: [winCount, lossCount],
+                        backgroundColor: ['#00e676', '#ff1744'], // Verde e Vermelho
+                        borderColor: ['#1c1c1c', '#1c1c1c'], // Borda da mesma cor do card
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%', // Espessura da rosca
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: 'var(--cor-texto-cinza)',
+                                font: {
+                                    size: 12,
+                                    family: 'Poppins'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        function checkAccessKey() {
+            const inputKey = document.getElementById('access-key').value;
+            const errorMsg = document.getElementById('error-msg');
+            const loginScreen = document.getElementById('loginScreen');
+            const appContainer = document.getElementById('appContainer');
+
+            if (inputKey === correctKey) {
+                errorMsg.style.display = 'none';
+                loginScreen.style.display = 'none'; // Hide the login screen
+                appContainer.style.display = 'flex'; // Show the main application
+            } else {
+                errorMsg.style.display = 'block';
+                document.getElementById('access-key').value = ''; // Clear the input field
+            }
+        }
+
+        // Allow pressing Enter to log in
+        document.getElementById('access-key').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                checkAccessKey();
+            }
+        });
+
+        function analyzeChart() {
+            const loadingElement = document.getElementById('loading');
+            const resultElement = document.getElementById('result');
+            const entryActionElement = document.getElementById('entry-action');
+            const chartUpload = document.getElementById('chart-upload');
+            const analyzeButton = document.querySelector('.analyze-trigger');
+
+            if (!chartUpload.files.length) {
+                alert('Por favor, faça o upload de uma imagem do gráfico ou tire uma foto antes de analisar.');
+                return;
+            }
+
+            resultElement.style.display = 'none';
+            loadingElement.style.display = 'block';
+            analyzeButton.textContent = 'Analisando...';
+            analyzeButton.style.backgroundColor = '#a0a0a0';
+            analyzeButton.style.boxShadow = 'none';
+            analyzeButton.style.cursor = 'default';
+
+            setTimeout(() => {
+                const aiSelection = document.getElementById('ai-selection').value;
+                const strategySelection = document.getElementById('strategy-selection').value;
+                const pairSelection = document.getElementById('pair-selection').value;
+
+                console.log(`IA Selecionada: ${aiSelection}`);
+                console.log(`Estratégia Selecionada: ${strategySelection}`);
+                console.log(`Paridade Selecionada: ${pairSelection}`);
+
+                const randomAction = Math.random() > 0.5 ? 'COMPRA' : 'VENDA';
+                entryActionElement.textContent = randomAction;
+                entryActionElement.className = `action ${randomAction.toLowerCase()}`;
+
+                loadingElement.style.display = 'none';
+                resultElement.style.display = 'block';
+
+                analyzeButton.innerHTML = '<i class="fas fa-chart-line"></i> Analisar Entrada com IA';
+                analyzeButton.style.backgroundColor = 'var(--cor-primaria-roxo)';
+                analyzeButton.style.boxShadow = '0 4px 15px rgba(138, 43, 226, 0.4)';
+                analyzeButton.style.cursor = 'pointer';
+
+            }, 3000);
+        }
+
+        document.getElementById('chart-upload').addEventListener('change', function() {
+            const uploadLabelButton = document.querySelector('.upload-trigger');
+            if (this.files && this.files.length > 0) {
+                uploadLabelButton.innerHTML = `<i class="fas fa-check"></i> Gráfico Carregado!`;
+                uploadLabelButton.style.backgroundColor = '#00e676';
+                uploadLabelButton.style.boxShadow = '0 4px 15px rgba(0,230,118,0.3)';
+            } else {
+                uploadLabelButton.innerHTML = `<i class="fas fa-upload"></i> Carregar Gráfico`;
+                uploadLabelButton.style.backgroundColor = 'var(--cor-primaria-roxo)';
+                uploadLabelButton.style.boxShadow = '0 4px 15px rgba(138, 43, 226, 0.4)';
+            }
+        });
+
+        // History operations functions
+        function addOperation(type) {
+            const historyList = document.getElementById('operation-history');
+            const date = new Date();
+            const time = date.toLocaleTimeString('pt-BR');
+            const pair = document.getElementById('pair-selection').value.toUpperCase();
+            const ai = document.getElementById('ai-selection').value.toUpperCase();
+
+            const listItem = document.createElement('li');
+            listItem.textContent = `${time} - ${pair} (${ai}): ${type}`;
+
+            totalOperations++;
+
+            if (type.includes('WIN')) {
+                listItem.classList.add('win-item');
+                winCount++;
+                showWinNotification(); // Call the notification function
+            } else if (type === 'LOSS') {
+                listItem.classList.add('loss-item');
+                lossCount++;
+            }
+
+            // Specific classes for G1 and G2 for distinct styling if desired
+            if (type === 'WIN G1') {
+                listItem.classList.add('wing1-item');
+            }
+            if (type === 'WIN G2') {
+                listItem.classList.add('wing2-item');
+            }
+
+            historyList.prepend(listItem); // Add to the beginning of the list
+
+            updateMetrics(); // Atualiza todas as métricas, incluindo o gráfico
+        }
+
+        function updateMetrics() {
+            document.getElementById('win-count').textContent = winCount;
+            document.getElementById('loss-count').textContent = lossCount;
+
+            let assertiveness = 0;
+            if (totalOperations > 0) {
+                assertiveness = (winCount / totalOperations) * 100;
+            }
+            document.getElementById('assertiveness-percentage').textContent = `${assertiveness.toFixed(2)}%`;
+
+            // Lógica de exemplo para Chance de Alavancagem
+            // Você pode ajustar isso para sua estratégia real
+            let leverageChance = 0;
+            const aiSelection = document.getElementById('ai-selection').value;
+            if (assertiveness > 70 && winCount > 2) { // Exemplo: alta assertividade e algumas vitórias
+                if (aiSelection === 'grok3') { // Grok 3 pode ter mais chance de alavancagem
+                    leverageChance = Math.min(100, assertiveness * 1.2); 
+                } else {
+                    leverageChance = Math.min(100, assertiveness * 1.1);
+                }
+            } else if (assertiveness > 50 && winCount > 0) {
+                leverageChance = Math.min(100, assertiveness * 0.8);
+            }
+            document.getElementById('leverage-chance').textContent = `${leverageChance.toFixed(2)}%`;
+
+            // Atualiza o gráfico de assertividade
+            assertivenessChart.data.datasets[0].data = [winCount, lossCount];
+            // Para mostrar a porcentagem no tooltip
+            assertivenessChart.options.plugins.tooltip.callbacks.label = function(context) {
+                let label = context.label || '';
+                if (label) {
+                    label += ': ';
+                }
+                if (context.parsed !== null) {
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    if (total > 0) {
+                        label += ((context.parsed / total) * 100).toFixed(2) + '%';
+                    } else {
+                        label += '0%';
+                    }
+                }
+                return label;
+            };
+            assertivenessChart.update();
+        }
+
+        // --- Notification Functions ---
+        function showWinNotification() {
+            const notificationContainer = document.getElementById('notificationContainer');
+            const randomIndex = Math.floor(Math.random() * winMessages.length);
+            const message = winMessages[randomIndex];
+
+            const notification = document.createElement('div');
+            notification.classList.add('notification');
+            notification.textContent = message;
+
+            // Optional: If you want multiple notifications to stack, you might need to adjust the position of new ones.
+            // For now, they will just appear on top of each other in the center.
+
+            notificationContainer.appendChild(notification);
+
+            // Trigger the animation
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 50); // Small delay to ensure the element is rendered before animation
+
+            // Remove the notification after a few seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                notification.addEventListener('transitionend', () => {
+                    notification.remove();
+                });
+            }, 4000); // Notification visible for 4 seconds
+        }
+    </script>
+</body>
+</html>
